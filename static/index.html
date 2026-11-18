@@ -271,7 +271,6 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
       <div class="meta" id="sess"><span class="tag">No session running</span></div>
     </div>
     <div class="hr">
-    <button class="sw2" id="sw" role="switch" aria-checked="true" aria-label="EEG gating"><span class="lab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>EEG gating</span><span class="seg"><b>On</b><b>Off</b></span><span id="swT" hidden></span></button>
     <button class="cta" id="new2">New session <span class="arr"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
     </div>
   </header>
@@ -424,7 +423,7 @@ function onState(m){
   $('held').innerHTML=m.held.length?m.held.slice(0,30).map(h=>{const dl=[300,1200,1800][h.tier];const w=Math.max(0,Math.min(100,h.deadline_in/dl*100));
     return `<li class="c${h.tier}"><span class="tag c${h.tier}">T${h.tier}</span><span class="mono" style="font-size:12px">${esc(h.action)}</span><span class="when">${h.deadline_in>0?'≤ '+fmt(h.deadline_in):'due'}</span><span class="bar">${Array.from({length:10},(_,i)=>`<i class="${i<Math.ceil(w/10)?'on':''}"></i>`).join('')}</span></li>`}).join(''):'<li class="none" style="background:none;padding:0">Nothing held.</li>';
   $('sDone').textContent=m.done;$('sAppr').textContent=m.approved;$('sLat').textContent=m.mean_latency==null?'–':fmt(m.mean_latency/m.speed)+' real';$('sLeft').textContent=m.remaining;
-  const sw=$('sw');sw.setAttribute('aria-checked',m.enabled);$('swT').textContent='EEG gating '+(m.enabled?'on':'off');const tg=$('tog');tg.setAttribute('aria-pressed',m.enabled);const lt='Load signal '+(m.enabled?'on':'off');tg.setAttribute('aria-label',lt);$('togTip').textContent=lt;
+  const tg=$('tog');tg.setAttribute('aria-pressed',m.enabled);const lt='Load signal '+(m.enabled?'on':'off');tg.setAttribute('aria-label',lt);$('togTip').textContent=lt;
   if(!m.remaining&&!m.queued&&!m.shown&&m.done&&!debriefShown){debriefShown=true;openDebrief()}
   if(!current&&!queue.length)showEmpty();
 }
@@ -464,7 +463,7 @@ $('startForm').addEventListener('submit',async e=>{
   const r=await fetch('/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participant:f.get('participant'),policy:f.get('policy'),speed:+f.get('speed'),seed:1})});
   if(r.ok){const j=await r.json();toast(`Session started · ${j.requests} requests scripted`)}else toast('Could not start session');
 });
-$('sw').onclick=$('tog').onclick=async()=>{const r=await(await fetch('/toggle',{method:'POST'})).json();if(r.enabled!=null)toast('Load signal '+(r.enabled?'on':'off'))};
+$('tog').onclick=async()=>{const r=await(await fetch('/toggle',{method:'POST'})).json();if(r.enabled!=null)toast('Load signal '+(r.enabled?'on':'off'))};
 showEmpty();connect();
 fetch('/state').then(r=>r.json()).then(m=>{if(!m.policy)$('setup').showModal()});
 </script>
