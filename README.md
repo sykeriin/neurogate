@@ -151,6 +151,10 @@ PYTHONPATH=. python analysis/figures.py         # README figures
 
 Run the estimator in its own process. Pull 2 s windows with BrainFlow or pylsl and call `BandPowerEstimator.calibrate()` on n-back calibration windows. Then call `update()` on each window and POST `{"z": ..., "boundary": ...}` to `/load`. If no external load arrives for 5 s, the broker falls back to its simulator.
 
+## Security
+
+This is a single-machine research prototype with no authentication. Run it on `127.0.0.1` (uvicorn's default) only. Inputs are validated, and WebSocket connections from other origins are refused. Don't expose it on a network without adding auth for agent, reviewer and estimator roles.
+
 ## Ethics
 
 Raw EEG never reaches the broker. Users can switch load-gating off at any time. The scheduler cannot hold a request past its deadline. Logs are pseudonymised by participant ID.

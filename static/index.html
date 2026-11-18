@@ -298,7 +298,7 @@ function onState(m){
 async function openDebrief(){
   const r=await fetch('/debrief');if(!r.ok)return;const d=await r.json();
   $('dBig').innerHTML=`<div class="m"><div class="v">${d.caught}/${d.bad}</div><div class="k">bad actions caught</div></div><div class="m"><div class="v">${d.false_alarms}</div><div class="k">false alarms</div></div><div class="m"><div class="v">${d.rows.length}</div><div class="k">decisions</div></div>`;
-  $('dTab').innerHTML='<tr><th>Request</th><th>Truth</th><th>You</th></tr>'+d.rows.filter(x=>x.bad||x.decision==='reject').map(x=>`<tr><td>${esc(x.summary)}</td><td>${x.bad?esc(x.kind||'bad'):'fine'}</td><td class="${(x.bad===(x.decision==='reject'))?'hit':'miss'}">${x.decision}</td></tr>`).join('');
+  $('dTab').innerHTML='<tr><th>Request</th><th>Truth</th><th>You</th></tr>'+d.rows.filter(x=>x.bad||x.decision==='reject').map(x=>`<tr><td>${esc(x.summary)}</td><td>${x.bad?esc(x.kind||'bad'):'fine'}</td><td class="${(x.bad===(x.decision==='reject'))?'hit':'miss'}">${esc(x.decision)}</td></tr>`).join('');
   debriefDlg.showModal();
 }
 

@@ -21,7 +21,9 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 from .load import SimulatedLoad, LoadHistory
 from .models import ApprovalRequest, Tier
@@ -77,10 +79,10 @@ async def broadcast(msg: dict) -> None:
 
 
 class StartBody(BaseModel):
-    participant: str = "P00"
+    participant: str = Field("P00", pattern=r"^[A-Za-z0-9_-]{1,32}$")   # also used in the log filename
     policy: str = "troughlock"
     seed: int = 1
-    speed: float = 1.0          # >1 compresses time for demos
+    speed: float = Field(1.0, gt=0, le=1000)         # >1 compresses time for demos
     scenario: bool = True
 
 
@@ -99,8 +101,8 @@ class ReqBody(BaseModel):
     summary: str
     diff: dict
     provenance: str = ""
-    tier: int = 1
-    deadline_s: float = 600
+    tier: int = Field(1, ge=0, le=2)
+    deadline_s: float = Field(600, ge=30, le=7200)
 
 
 @app.post("/requests")
@@ -137,7 +139,7 @@ async def push_load(b: LoadBody):
 
 class Decision(BaseModel):
     id: str
-    decision: str
+    decision: Literal["approve", "reject"]
     reason: str | None = None
 
 
@@ -199,6 +201,10 @@ async def debrief():
 
 @app.websocket("/ws")
 async def ws(sock: WebSocket):
+    origin = sock.headers.get("origin")
+    if origin and origin.split("://")[-1] != sock.headers.get("host"):
+        await sock.close(code=1008)     # cross-site WebSocket hijacking guard
+        return
     await sock.accept()
     clients.add(sock)
     try:
