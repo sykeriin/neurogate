@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NeuroGate Reviewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#e9e8e4;--frame:#f5f4f1;--panel:#fff;--panel2:#f1f0ec;--line:#e4e2dc;--ink:#151515;--mute:#76736c;--dim:#b4b0a7;
@@ -191,6 +191,34 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 .reasons{margin-top:14px}.chip{padding:5px 12px;font-size:12px}
 .actions{margin-top:18px}.btn{padding:10px 20px;font-size:14px}
 .card::before{width:120px;height:120px;right:-40px;top:-40px}
+/* v3 */
+.ttl{font-family:"Inter Tight";font-size:44px;font-weight:600;letter-spacing:-.045em;line-height:1}
+.ttl em{font-family:"Instrument Serif",serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accent);font-size:1.12em}
+.meta{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap}
+.tag{font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--mute)}
+.tag.acc{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}.prog{width:120px;height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-left:6px}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .5s}
+.pct{font-family:"Inter Tight";font-weight:600;font-size:14px}.pct small{color:var(--mute);font-weight:400}
+/* smaller gate */
+.gate{padding:18px}.gatewrap{gap:16px;margin-top:10px}.ring{width:84px;height:84px}
+.ring .lbl b{font-size:20px}.ring .lbl small{font-size:9px}
+.gate h2{font-size:20px}.gate p{font-size:13px}.mini b{font-size:16px}
+/* bigger card */
+.stage{min-height:400px}.empty{min-height:400px}
+.card{padding:28px 30px;border-radius:26px}
+.card h2{font-size:clamp(24px,2.1vw,30px);margin:14px 0 6px}
+.diff div{padding:10px 18px;font-size:14px}.prov{font-size:14px}
+.chip{padding:6px 14px;font-size:13px}.btn{padding:12px 24px;font-size:15px}
+/* decision animation */
+.stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-8deg) scale(1.6);padding:10px 22px;border:3px solid;border-radius:14px;font-family:"Inter Tight";font-weight:700;font-size:28px;letter-spacing:-.02em;white-space:nowrap;opacity:0;animation:stamp .25s cubic-bezier(.3,1.5,.5,1) forwards;z-index:3;background:var(--panel)}
+.stamp.ok{color:var(--ok);border-color:var(--ok)}.stamp.no{color:#d94a3a;border-color:#d94a3a;transform:translate(-50%,-50%) rotate(8deg) scale(1.6)}
+@keyframes stamp{to{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}}
+.stamp.no{animation-name:stampn}@keyframes stampn{to{opacity:1;transform:translate(-50%,-50%) rotate(8deg) scale(1)}}
+.card.out-ok{animation:outok2 .6s cubic-bezier(.5,0,.75,0) forwards}
+.card.out-no{animation:outno2 .6s ease-in forwards}
+@keyframes outok2{0%,40%{transform:none;box-shadow:0 0 0 3px var(--ok)}100%{opacity:0;transform:translate(80px,-30px) rotate(4deg) scale(.94)}}
+@keyframes outno2{0%{transform:none}12%{transform:translateX(-8px)}24%{transform:translateX(8px);box-shadow:0 0 0 3px #d94a3a}36%,45%{transform:none}100%{opacity:0;transform:translateY(60px) rotate(-3deg) scale(.94)}}
 </style>
 </head>
 <body>
@@ -207,8 +235,8 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 <div class="frame">
   <header class="hero">
     <div>
-      <h1 class="ttl">Approval queue</h1>
-      <div class="sub" id="sess">No session running</div>
+      <h1 class="ttl">Approval <em>queue</em></h1>
+      <div class="meta" id="sess"><span class="tag">No session running</span></div>
     </div>
     <div class="hr">
     <button class="sw" id="sw" role="switch" aria-checked="true"><span class="knob"></span><span id="swT">EEG gating on</span></button>
@@ -230,7 +258,7 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 
     <aside class="col">
       <section class="tile dark gate" id="gate" aria-label="Attention gate">
-        <div class="th"><h3><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>Attention gate</h3><span class="count mono" style="color:var(--dark-mute)"><span class="lv" id="lv"><i class="conn" id="conn2"></i><span id="lvT">offline</span></span> · <span id="mT">–</span></span></div>
+        <div class="th"><h3><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>Attention gate</h3><span class="count mono" style="color:var(--dark-mute)"><span id="mT">–</span></span></div>
         <div class="gatewrap">
           <div class="ring"><svg viewBox="0 0 120 120"><circle class="bgc" cx="60" cy="60" r="50" fill="none" stroke-width="12"/><circle class="fg" id="ring" cx="60" cy="60" r="50" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/></svg>
             <div class="lbl"><div><b class="mono" id="mPct">–</b><small>load %ile</small></div></div></div>
@@ -336,9 +364,9 @@ async function decide(d){
   const r=current;current=null;
   const res=await fetch('/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,decision:d,reason})});
   if(!res.ok){current=r;toast('Could not record decision');return}
-  const card=$('card');card.classList.add(d==='approve'?'out-ok':'out-no');
-  toast(d==='approve'?'Approved':'Rejected');
-  busy=true;setTimeout(()=>{busy=false;if(!current)next()},320);
+  const card=$('card');const st=document.createElement('div');st.className='stamp '+(d==='approve'?'ok':'no');st.textContent=d==='approve'?'✓ Approved':'✕ Rejected';card.appendChild(st);card.classList.add(d==='approve'?'out-ok':'out-no');
+
+  busy=true;setTimeout(()=>{busy=false;if(!current)next()},620);
 }
 document.addEventListener('keydown',e=>{
   if(document.querySelector('dialog[open]')||e.target.matches?.('input,select,textarea')||e.ctrlKey||e.metaKey)return;
@@ -352,7 +380,7 @@ function onState(m){
   if(last&&last.policy&&(last.policy+'|'+last.participant+'|'+last.speed)!==sk||last&&m.t<last.t){queue.length=0;current=null;trace.length=0;debriefShown=false;last=m;try{sock.close()}catch{};return}
   last=m;
   if(!m.policy)return;
-  $('sess').innerHTML=`<b>${esc(m.policy)}</b> · participant <b>${esc(m.participant)}</b> · ${m.speed}× speed · ${m.done} decided, ${m.queued+m.shown+m.remaining} to go`;
+  {const tot=m.done+m.queued+m.shown+m.remaining;$('sess').innerHTML=`<span class="tag acc">${esc(m.policy)}</span><span class="tag">${esc(m.participant)}</span><span class="tag">${m.speed}×</span><span class="pg"><span class="prog"><i style="width:${tot?100*m.done/tot:0}%"></i></span><span class="pct">${m.done}<small>/${tot}</small></span></span>`}
   trace.push({p:m.smooth_pct??m.pct,r:m.pct,b:m.boundary,g:m.gate});if(trace.length>N)trace.shift();draw();
   const sp=m.smooth_pct??m.pct;$('mPct').textContent='p'+Math.round(sp*100);$('ring').style.strokeDashoffset=314.16*(1-sp);$('mZ').textContent=(m.load>0?'+':'')+m.load.toFixed(2);$('mT').textContent=fmt(m.t);
   const g=$('gate');g.className='tile dark gate';
@@ -391,11 +419,11 @@ addEventListener('resize',draw);
 
 function connect(){
   const ws=sock=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/ws');
-  ws.onopen=()=>{$('conn2').classList.add('on');$('lvT').textContent='live';$('conn').classList.add('on');$('connt').textContent='connected'};
+  ws.onopen=()=>{$('conn').classList.add('on');$('connt').textContent='connected'};
   ws.onmessage=e=>{const m=JSON.parse(e.data);
     if(m.type==='request'&&current?.id!==m.req.id&&!queue.some(q=>q.id===m.req.id)){queue.push(m.req);if(!current&&!busy)next();else if($('more'))$('more').textContent=`· ${queue.length} more waiting`}
     if(m.type==='state')onState(m)};
-  ws.onclose=()=>{$('conn2').classList.remove('on');$('lvT').textContent='offline';const c=$('conn');if(c){c.classList.remove('on');$('connt').textContent='reconnecting'}setTimeout(connect,1000)};
+  ws.onclose=()=>{const c=$('conn');if(c){c.classList.remove('on');$('connt').textContent='reconnecting'}setTimeout(connect,1000)};
 }
 $('new').onclick=$('new2').onclick=()=>$('setup').showModal();
 $('startForm').addEventListener('submit',async e=>{
