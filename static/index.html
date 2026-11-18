@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroGate Reviewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1120;--panel:#141a2e;--panel2:#1a2139;--line:#262f4d;--ink:#eef0f6;--mute:#8d96b3;--dim:#5b6486;
+  --accent:#e8803a;--accent-ink:#1b0f05;--ok:#4cc38a;--t0:#ff6b6b;--t1:#f5b84a;--t2:#6fa8ff;--trough:rgba(76,195,138,.13);
+  --shadow:0 20px 50px -20px rgba(0,0,0,.6);
+}
+:root[data-theme=light]{--bg:#f4f2ec;--panel:#fff;--panel2:#f8f6f1;--line:#e3dfd5;--ink:#141a2e;--mute:#5d6582;--dim:#9aa0b5;
+  --accent:#c9611b;--accent-ink:#fff;--ok:#1f9d63;--t0:#d43c3c;--t1:#b97a06;--t2:#2f6bd6;--trough:rgba(31,157,99,.10);--shadow:0 20px 40px -24px rgba(20,26,46,.35)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.01em;margin:0}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);z-index:5}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Space Grotesk";font-weight:700;font-size:18px}
+.logo{width:26px;height:26px}
+.sess{color:var(--mute);font-size:13px;display:flex;gap:12px;flex-wrap:wrap}
+.sess b{color:var(--ink);font-weight:500}
+.sp{flex:1}
+.ghost{background:none;border:1px solid var(--line);border-radius:9px;padding:7px 12px;font-size:13px;color:var(--mute)}
+.ghost:hover{color:var(--ink);border-color:var(--dim)}
+.switch[aria-pressed=false]{color:var(--t0);border-color:color-mix(in srgb,var(--t0) 50%,var(--line))}
+
+/* layout */
+.grid{display:grid;grid-template-columns:minmax(330px,420px) 1fr;gap:20px;padding:20px 22px;max-width:1400px;margin:0 auto}
+@media (max-width:900px){.grid{grid-template-columns:1fr;padding:16px}.top{padding:12px 16px}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+/* gate */
+.gate{display:flex;align-items:center;gap:14px;margin-top:10px}
+.orb{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--panel2);border:1px solid var(--line);transition:.4s}
+.orb i{width:14px;height:14px;border-radius:50%;background:var(--dim);transition:.4s}
+.gate.open .orb{border-color:var(--ok);box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 15%,transparent)}
+.gate.open .orb i{background:var(--ok);animation:pulse 1.6s infinite}
+.gate.hold .orb i{background:var(--accent)}
+@keyframes pulse{50%{transform:scale(1.35);opacity:.6}}
+.gate h2{font-size:22px}.gate p{margin:0;color:var(--mute);font-size:13px}
+
+.meter{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.m{background:var(--panel2);border-radius:11px;padding:10px 12px}
+.m .v{font-family:"Space Grotesk";font-size:22px;font-weight:600}
+.m .k{font-size:11px;color:var(--mute)}
+canvas{width:100%;height:150px;display:block;margin-top:14px;border-radius:10px;background:var(--panel2)}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--mute);margin-top:8px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--c)}
+
+/* held queue */
+.held{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto}
+.held li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--panel2);border-radius:10px;padding:9px 12px;font-size:13px}
+.held .bar{grid-column:1/-1;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+.held .bar i{display:block;height:100%;background:var(--c);transition:width 1s linear}
+.held .when{color:var(--mute);font-size:12px}
+.none{color:var(--dim);font-size:13px;padding:8px 0}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);white-space:nowrap}
+.c0{--c:var(--t0)}.c1{--c:var(--t1)}.c2{--c:var(--t2)}
+
+/* stage */
+.stagehead{display:flex;align-items:baseline;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.stagehead h1{font-size:28px}
+.count{color:var(--mute);font-size:13px}
+.stage{position:relative;min-height:420px;margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:var(--shadow);animation:in .45s cubic-bezier(.2,.8,.2,1)}
+.card.c0{border-top:3px solid var(--t0)}.card.c1{border-top:3px solid var(--t1)}.card.c2{border-top:3px solid var(--t2)}
+@keyframes in{from{transform:translateY(14px) scale(.985)}}
+.card.out-ok{animation:outok .35s forwards}.card.out-no{animation:outno .35s forwards}
+@keyframes outok{to{opacity:0;transform:translateX(60px) rotate(1.5deg)}}
+@keyframes outno{to{opacity:0;transform:translateX(-60px) rotate(-1.5deg)}}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+.card h2{font-size:24px;margin:12px 0 4px}
+.card .act{font-family:"JetBrains Mono";font-size:12px;color:var(--mute)}
+.diff{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.diff div{display:grid;grid-template-columns:160px 1fr;gap:12px;padding:10px 14px;font-size:14px}
+.diff div+div{border-top:1px solid var(--line)}
+.diff dt{color:var(--mute)}.diff dd{margin:0;font-family:"JetBrains Mono";font-size:13px;word-break:break-word}
+@media (max-width:560px){.diff div{grid-template-columns:1fr;gap:2px}.card{padding:18px}}
+.prov{display:flex;gap:10px;background:var(--panel2);border-radius:12px;padding:12px 14px;font-size:14px}
+.prov svg{flex:none;margin-top:2px;color:var(--accent)}
+.reasons{margin-top:18px}.reasons p{margin:0 0 8px;font-size:13px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px}
+.chip kbd{margin-right:6px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:600;display:inline-flex;align-items:center;gap:10px}
+.btn.ok{background:var(--accent);color:var(--accent-ink)}.btn.ok:hover{filter:brightness(1.08)}
+.btn.no{background:none;border:1px solid var(--line);color:var(--t0)}.btn.no:hover{border-color:var(--t0)}
+kbd{font-family:"JetBrains Mono";font-size:11px;padding:1px 6px;border-radius:5px;border:1px solid currentColor;opacity:.7}
+.forced{color:var(--t0)}
+
+.empty{display:grid;place-items:center;text-align:center;min-height:420px;border:1px dashed var(--line);border-radius:20px;color:var(--mute);padding:30px}
+.empty h3{color:var(--ink);font-size:20px;margin:16px 0 6px}
+.empty p{max-width:380px;margin:0 auto;font-size:14px}
+.breath{width:70px;height:70px;border-radius:50%;margin:0 auto;border:2px solid var(--line);position:relative}
+.breath::after{content:"";position:absolute;inset:14px;border-radius:50%;background:var(--accent);opacity:.25;animation:breath 4s ease-in-out infinite}
+@keyframes breath{50%{inset:4px;opacity:.5}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* modal */
+dialog{border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--ink);padding:0;width:min(560px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(5,8,18,.6);backdrop-filter:blur(4px)}
+.dlg{padding:26px}.dlg h2{font-size:24px;margin:6px 0 4px}.dlg>p{color:var(--mute);margin:0 0 18px;font-size:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:13px;color:var(--mute)}
+.field input,.field select{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pol{display:grid;gap:8px;margin-bottom:14px}
+.pol label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:13px;color:var(--mute)}
+.pol label b{color:var(--ink);display:block;font-size:14px}
+.pol input{accent-color:var(--accent);margin-top:4px}
+.pol label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.more{font-size:13px;color:var(--mute)}
+.debrief table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+.debrief td,.debrief th{padding:7px 6px;border-top:1px solid var(--line);text-align:left}
+.debrief th{color:var(--mute);font-weight:500}
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hit{color:var(--ok)}.miss{color:var(--t0)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:20}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.conn{width:8px;height:8px;border-radius:50%;background:var(--t0);display:inline-block}
+.conn.on{background:var(--ok)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="var(--accent)" stroke-width="2.5"/><path d="M5 18c3 0 4-6 7-6s3 9 6 9 3-7 6-7 2 4 3 4" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/></svg>
+    NeuroGate
+  </div>
+  <div class="sess" id="sess"><span><i class="conn" id="conn"></i> <span id="connt">connecting</span></span></div>
+  <div class="sp"></div>
+  <button class="ghost switch" id="tog" aria-pressed="true" title="Stop using workload data">Load signal on</button>
+  <button class="ghost" id="theme" aria-label="Toggle theme">◐</button>
+  <button class="ghost" id="new">New session</button>
+</header>
+
+<div class="grid">
+  <div class="col">
+    <section class="panel" aria-label="Attention state">
+      <div class="eyebrow">Attention gate</div>
+      <div class="gate" id="gate"><div class="orb"><i></i></div><div><h2 id="gateH">Idle</h2><p id="gateP">Start a session to begin.</p></div></div>
+      <canvas id="trace" aria-label="Workload trace"></canvas>
+      <div class="legend"><span style="--c:var(--accent)">smoothed load %ile</span><span style="--c:var(--dim)">raw</span><span style="--c:var(--ok)">trough</span><span style="--c:var(--t2)">task boundary</span></div>
+      <div class="meter">
+        <div class="m"><div class="v mono" id="mPct">–</div><div class="k">load percentile</div></div>
+        <div class="m"><div class="v mono" id="mZ">–</div><div class="k">load z</div></div>
+        <div class="m"><div class="v mono" id="mT">–</div><div class="k">session time</div></div>
+      </div>
+    </section>
+    <section class="panel" aria-label="Held requests">
+      <div class="stagehead"><div class="eyebrow">Waiting for a trough</div><span class="count mono" id="heldN">0</span></div>
+      <ul class="held" id="held"><li class="none" style="background:none;padding:0">Nothing held.</li></ul>
+    </section>
+  </div>
+
+  <main class="col">
+    <div>
+      <div class="stagehead"><h1>Review</h1><span class="count" id="qcount">Shortcuts: <kbd>A</kbd> approve · <kbd>R</kbd> reject · <kbd>1</kbd>–<kbd>4</kbd> reason</span></div>
+      <div class="stage" id="stage"></div>
+      <div class="stats">
+        <div class="m"><div class="v mono" id="sDone">0</div><div class="k">decided</div></div>
+        <div class="m"><div class="v mono" id="sAppr">0</div><div class="k">approved</div></div>
+        <div class="m"><div class="v mono" id="sLat">–</div><div class="k">mean decision time</div></div>
+        <div class="m"><div class="v mono" id="sLeft">–</div><div class="k">still to arrive</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<dialog id="setup"><form method="dialog" class="dlg" id="startForm">
+  <div class="eyebrow">New session</div>
+  <h2>Who's reviewing, and how?</h2>
+  <p>The agent stream is scripted and seeded. About 12% of requests are subtly wrong. Your job is to catch them.</p>
+  <div class="pol" role="radiogroup" aria-label="Policy">
+    <label><input type="radio" name="policy" value="troughlock" checked><span><b>TroughLock</b>Holds every request, riskiest first, for the next confirmed low-load moment.</span></label>
+    <label><input type="radio" name="policy" value="troughlock_noeeg"><span><b>TroughLock, no EEG</b>Same scheduler, app task boundaries only.</span></label>
+    <label><input type="radio" name="policy" value="immediate"><span><b>Immediate</b>Today's default: show everything the moment it arrives.</span></label>
+  </div>
+  <details class="more"><summary>Other baselines</summary>
+    <div class="pol" style="margin-top:8px">
+      <label><input type="radio" name="policy" value="boundary"><span><b>Boundary only</b></span></label>
+      <label><input type="radio" name="policy" value="batch"><span><b>Fixed batch</b> every 10 min</span></label>
+      <label><input type="radio" name="policy" value="fatigue_budget"><span><b>Fatigue budget</b></span></label>
+      <label><input type="radio" name="policy" value="neurogate"><span><b>NeuroGate v1</b> (OR gate)</span></label>
+      <label><input type="radio" name="policy" value="neurogate_and"><span><b>NeuroGate AND</b></span></label>
+    </div>
+  </details>
+  <div class="two" style="margin-top:14px">
+    <label class="field">Participant ID<input name="participant" value="P00" required></label>
+    <label class="field">Time speed-up<select name="speed"><option value="1">1× (study)</option><option value="10">10×</option><option value="20" selected>20× (demo)</option><option value="60">60×</option></select></label>
+  </div>
+  <div class="actions" style="justify-content:flex-end;margin-top:6px">
+    <button class="btn no" value="cancel" formnovalidate style="color:var(--mute)">Cancel</button>
+    <button class="btn ok" value="go">Start session</button>
+  </div>
+</form></dialog>
+
+<dialog id="debrief"><div class="dlg debrief">
+  <div class="eyebrow">Debrief</div><h2>How you did</h2><p>Ground truth is revealed only now that every request is decided.</p>
+  <div class="big" id="dBig"></div>
+  <div style="max-height:300px;overflow:auto"><table id="dTab"></table></div>
+  <div class="actions" style="justify-content:flex-end"><button class="btn ok" onclick="debriefDlg.close()">Close</button></div>
+</div></dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const REASONS=['Matches the request','Verified recipient','Amount matches invoice','Expected cleanup'];
+const TIER=['Tier 0 · irreversible','Tier 1 · consequential','Tier 2 · low risk'];
+const queue=[];let current=null,reason=null,last=null,debriefShown=false;
+const trace=[];const N=240;
+const debriefDlg=$('debrief');
+
+// theme
+try{const t=localStorage.getItem('ng-theme');if(t)document.documentElement.dataset.theme=t}catch{}
+$('theme').onclick=()=>{const d=document.documentElement,n=d.dataset.theme==='light'?'dark':'light';d.dataset.theme=n;try{localStorage.setItem('ng-theme',n)}catch{};draw()};
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2200)}
+const fmt=s=>{s=Math.max(0,Math.round(s));const m=Math.floor(s/60);return m?`${m}m ${String(s%60).padStart(2,'0')}s`:`${s}s`};
+
+function showEmpty(){
+  const running=last&&last.policy;
+  $('stage').innerHTML=`<div class="empty"><div><div class="breath"></div>
+   <h3>${running?'Nothing needs you right now':'No session running'}</h3>
+   <p>${running?'Keep working on your main task. Requests appear here when your attention has room for them.':'Press <b>New session</b> to start the scripted agent stream.'}</p></div></div>`;
+}
+function next(){
+  current=queue.shift()||null;reason=null;
+  if(!current)return showEmpty();
+  const r=current,rows=Object.entries(r.diff).map(([k,v])=>`<div><dt>${esc(k.replace(/_/g,' '))}</dt><dd>${esc(Array.isArray(v)?v.join(', '):v)}</dd></div>`).join('');
+  $('stage').innerHTML=`<article class="card c${r.tier}" id="card">
+   <div class="meta"><span class="tag c${r.tier}">${TIER[r.tier]}</span>${r.forced?'<span class="forced">shown at deadline</span>':`<span>released at load p${Math.round((r.load_pct??0)*100)}</span>`}<span id="more">${queue.length?`· ${queue.length} more waiting`:''}</span></div>
+   <h2>${esc(r.summary)}</h2><div class="act">${esc(r.action)}</div>
+   <dl class="diff">${rows}</dl>
+   <div class="prov"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h7l3 3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><div><b>Triggered by</b><br>${esc(r.provenance)}</div></div>
+   ${r.tier===0?`<div class="reasons"><p>Approving an irreversible action needs a reason.</p><div class="chips" id="chips">${REASONS.map((x,i)=>`<button class="chip" aria-pressed="false" data-r="${x}"><kbd>${i+1}</kbd>${x}</button>`).join('')}</div></div>`:''}
+   <div class="actions"><button class="btn ok" id="bA">Approve <kbd>A</kbd></button><button class="btn no" id="bR">Reject <kbd>R</kbd></button></div>
+  </article>`;
+  document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>pick(b.dataset.r));
+  $('bA').onclick=()=>decide('approve');$('bR').onclick=()=>decide('reject');
+  $('bA').focus({preventScroll:true});
+}
+function pick(r){reason=r;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.r===r))}
+async function decide(d){
+  if(!current)return;
+  if(d==='approve'&&current.tier===0&&!reason){const c=$('chips');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');toast('Pick a reason first (keys 1–4)');return}
+  const r=current;current=null;
+  const res=await fetch('/decide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,decision:d,reason})});
+  if(!res.ok){current=r;toast('Could not record decision');return}
+  const card=$('card');card.classList.add(d==='approve'?'out-ok':'out-no');
+  toast(d==='approve'?'Approved':'Rejected');
+  setTimeout(next,320);
+}
+document.addEventListener('keydown',e=>{
+  if(document.querySelector('dialog[open]')||e.target.matches?.('input,select,textarea')||e.ctrlKey||e.metaKey)return;
+  const k=e.key.toLowerCase();
+  if(k==='a')decide('approve');else if(k==='r')decide('reject');
+  else if(current?.tier===0&&'1234'.includes(k))pick(REASONS[+k-1]);
+});
+
+function onState(m){
+  last=m;
+  if(!m.policy)return;
+  $('sess').innerHTML=`<span><i class="conn on"></i> live</span><span>policy <b>${esc(m.policy)}</b></span><span>participant <b>${esc(m.participant)}</b></span><span><b>${m.speed}×</b></span>`;
+  trace.push({p:m.smooth_pct??m.pct,r:m.pct,b:m.boundary,g:m.gate});if(trace.length>N)trace.shift();draw();
+  $('mPct').textContent='p'+Math.round((m.smooth_pct??m.pct)*100);$('mZ').textContent=(m.load>0?'+':'')+m.load.toFixed(2);$('mT').textContent=fmt(m.t);
+  const g=$('gate');g.className='gate';
+  if(!m.enabled){$('gateH').textContent='Load signal off';$('gateP').textContent='Requests release at task boundaries and deadlines only.'}
+  else if(m.gate===true){g.classList.add('open');$('gateH').textContent='Trough: releasing';$('gateP').textContent='Load is low enough to show a request.'}
+  else if(m.queued){g.classList.add('hold');$('gateH').textContent='Holding';$('gateP').textContent=`${m.queued} request${m.queued>1?'s':''} waiting for spare attention.`}
+  else{$('gateH').textContent='Clear';$('gateP').textContent=m.boundary?'Task boundary.':'No requests waiting.'}
+  $('heldN').textContent=m.queued;
+  $('held').innerHTML=m.held.length?m.held.slice(0,30).map(h=>{const dl=[300,1200,1800][h.tier];const w=Math.max(0,Math.min(100,h.deadline_in/dl*100));
+    return `<li class="c${h.tier}"><span class="tag c${h.tier}">T${h.tier}</span><span class="mono" style="font-size:12px">${esc(h.action)}</span><span class="when">${h.deadline_in>0?'≤ '+fmt(h.deadline_in):'due'}</span><span class="bar"><i style="width:${w}%"></i></span></li>`}).join(''):'<li class="none" style="background:none;padding:0">Nothing held.</li>';
+  $('sDone').textContent=m.done;$('sAppr').textContent=m.approved;$('sLat').textContent=m.mean_latency==null?'–':fmt(m.mean_latency/m.speed)+' real';$('sLeft').textContent=m.remaining;
+  const tg=$('tog');tg.setAttribute('aria-pressed',m.enabled);tg.textContent='Load signal '+(m.enabled?'on':'off');
+  if(!m.remaining&&!m.queued&&!m.shown&&m.done&&!debriefShown){debriefShown=true;openDebrief()}
+  if(!current&&!queue.length)showEmpty();
+}
+async function openDebrief(){
+  const r=await fetch('/debrief');if(!r.ok)return;const d=await r.json();
+  $('dBig').innerHTML=`<div class="m"><div class="v">${d.caught}/${d.bad}</div><div class="k">bad actions caught</div></div><div class="m"><div class="v">${d.false_alarms}</div><div class="k">false alarms</div></div><div class="m"><div class="v">${d.rows.length}</div><div class="k">decisions</div></div>`;
+  $('dTab').innerHTML='<tr><th>Request</th><th>Truth</th><th>You</th></tr>'+d.rows.filter(x=>x.bad||x.decision==='reject').map(x=>`<tr><td>${esc(x.summary)}</td><td>${x.bad?esc(x.kind||'bad'):'fine'}</td><td class="${(x.bad===(x.decision==='reject'))?'hit':'miss'}">${x.decision}</td></tr>`).join('');
+  debriefDlg.showModal();
+}
+
+// trace
+function draw(){
+  const c=$('trace'),dpr=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(!w)return;
+  c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);
+  const cs=getComputedStyle(document.documentElement),col=n=>cs.getPropertyValue(n).trim();
+  const n=Math.max(trace.length,60),X=i=>i/(n-1)*w,Y=p=>6+(1-p)*(h-12);
+  trace.forEach((t,i)=>{if(t.g){x.fillStyle=col('--trough');x.fillRect(X(i)-w/n/2,0,w/n+1,h)}});
+  trace.forEach((t,i)=>{if(t.b){x.fillStyle=col('--t2');x.globalAlpha=.5;x.fillRect(X(i),h-5,2,5);x.globalAlpha=1}});
+  x.setLineDash([4,4]);x.strokeStyle=col('--line');x.beginPath();x.moveTo(0,Y(.5));x.lineTo(w,Y(.5));x.stroke();x.setLineDash([]);
+  const line=(k,c2,lw)=>{x.strokeStyle=c2;x.lineWidth=lw;x.lineJoin='round';x.beginPath();trace.forEach((t,i)=>i?x.lineTo(X(i),Y(t[k])):x.moveTo(X(i),Y(t[k])));x.stroke()};
+  line('r',col('--dim'),1);line('p',col('--accent'),2.2);
+}
+addEventListener('resize',draw);
+
+function connect(){
+  const ws=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/ws');
+  ws.onopen=()=>{$('conn').classList.add('on');$('connt').textContent='connected'};
+  ws.onmessage=e=>{const m=JSON.parse(e.data);
+    if(m.type==='request'&&current?.id!==m.req.id&&!queue.some(q=>q.id===m.req.id)){queue.push(m.req);if(!current)next();else if($('more'))$('more').textContent=`· ${queue.length} more waiting`}
+    if(m.type==='state')onState(m)};
+  ws.onclose=()=>{const c=$('conn');if(c){c.classList.remove('on');$('connt').textContent='reconnecting'}setTimeout(connect,1000)};
+}
+$('new').onclick=()=>$('setup').showModal();
+$('startForm').addEventListener('submit',async e=>{
+  if(e.submitter?.value!=='go')return;
+  const f=new FormData(e.target);queue.length=0;current=null;trace.length=0;debriefShown=false;
+  const r=await fetch('/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participant:f.get('participant'),policy:f.get('policy'),speed:+f.get('speed'),seed:1})});
+  if(r.ok){const j=await r.json();toast(`Session started · ${j.requests} requests scripted`)}else toast('Could not start session');
+});
+$('tog').onclick=async()=>{const r=await(await fetch('/toggle',{method:'POST'})).json();if(r.enabled!=null)toast('Load signal '+(r.enabled?'on':'off'))};
+showEmpty();connect();
+fetch('/state').then(r=>r.json()).then(m=>{if(!m.policy)$('setup').showModal()});
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<title>NeuroGate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: one reading column, a signal-trace motif, tables and the d′ chart as the only boxed objects */
+:root{
+  --bg:#f3f5f4;--surface:#ffffff;--fg:#17201d;--mute:#5c6a65;--line:#d6ddda;
+  --accent:#1f6f5c;--theta:#c2410c;--alpha:#2563a8;
+  --display:"Fraunces",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101614;--surface:#18201d;--fg:#e4ebe8;--mute:#93a39d;--line:#2a3532;--accent:#5cc4a6;--theta:#fb923c;--alpha:#7fb0ef;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101614;--surface:#18201d;--fg:#e4ebe8;--mute:#93a39d;--line:#2a3532;--accent:#5cc4a6;--theta:#fb923c;--alpha:#7fb0ef;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1{font:600 clamp(40px,8vw,64px)/1 var(--display);margin:0;letter-spacing:-.01em}
+h2{font:600 26px/1.2 var(--display);margin:0 0 12px;text-wrap:balance}
+p{margin:0 0 12px;max-width:65ch}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.lede{font-size:19px;color:var(--fg)}
+.trace{width:100%;height:56px;display:block}
+.trace path{fill:none;stroke-width:2}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+code{font:13px var(--mono);background:var(--surface);border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+ol,ul{margin:0;padding-left:20px;display:grid;gap:6px;max-width:65ch}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--fg);font:12px var(--mono)}
+.chart .m{fill:var(--mute)}
+.note{font-size:14px;color:var(--mute)}
+.pill{display:inline-block;font:500 11px var(--mono);padding:1px 7px;border-radius:99px;border:1px solid currentColor}
+.t0{color:var(--theta)}.t1{color:var(--alpha)}.t2{color:var(--accent)}
+</style>
+
+<div class="wrap">
+<header style="display:grid;gap:14px">
+  <span class="eyebrow">Project A · Nov 2026 · prototype + study plan</span>
+  <h1>NeuroGate</h1>
+  <p class="lede">When an AI agent needs a human to approve a risky action, the moment it asks matters. NeuroGate reads the reviewer's workload from EEG and holds approval requests until they have the attention to judge them. Then it measures whether that catches more bad actions.</p>
+  <svg class="trace" viewBox="0 0 760 56" preserveAspectRatio="none" aria-hidden="true">
+    <path stroke="var(--theta)" d="M0 30 C40 10 70 48 110 28 S180 8 220 30 S290 50 330 26 S400 6 440 30 S510 46 550 24 S620 10 660 30 S730 44 760 28"/>
+    <path stroke="var(--alpha)" opacity=".7" d="M0 36 C30 42 60 22 95 34 S165 46 200 30 S270 18 310 36 S380 46 420 32 S490 20 530 36 S600 44 640 30 S720 22 760 36"/>
+  </svg>
+</header>
+
+<section>
+  <h2>Why now</h2>
+  <ul>
+    <li>Approval gates are the default safety control for agents, and reviewers fatigue. "Oversight Has a Capacity" (arXiv 2606.08919) shows that escalating more can be less safe.</li>
+    <li>FIDES and CaMeL-style agents depend on human confirmation, which invites confirmation fatigue and social engineering.</li>
+    <li>EU AI Act Article 14 expects operators to stay aware of automation bias.</li>
+    <li>EEG-timed interruption already works for social messages (Kosmyna, Google). Nobody has tested it on security-relevant approvals with planted bad actions.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <ol>
+    <li><b>Workload estimator.</b> 8–10 minutes of 0/1/2-back calibration per user. It computes log(frontal-midline theta ÷ parietal alpha) on 2 s windows with 50% overlap, then z-scores it against the user's own baseline and smooths it with an EMA. It is relative, not absolute: cross-subject decoding on COG-BCI reaches only ~0.45 balanced accuracy.</li>
+    <li><b>Risk-tiered queue.</b> <span class="pill t0">Tier 0</span> payments, deletes and external sends are never held past their deadline and need a reason to approve. <span class="pill t1">Tier 1</span> requests are reversible and schedulable. <span class="pill t2">Tier 2</span> requests are batched.</li>
+    <li><b>Scheduler.</b> It releases a request when load is in the user's own bottom 40% or at a subtask boundary, unless the deadline forces it. An anti-flood cap stops an attacker from draining attention by spamming approvals.</li>
+    <li><b>Reviewer interface.</b> It shows the diff (recipient, amount, path) and the content that triggered the action, and logs latency and load at the moment of each decision.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Five conditions, one seeded stream</h2>
+  <div class="scroll"><table>
+    <tr><th>Policy</th><th>Releases a request when…</th></tr>
+    <tr><td>Immediate</td><td>it arrives (today's default)</td></tr>
+    <tr><td>Fixed batch</td><td>every 10 minutes; Tier 0 at once</td></tr>
+    <tr><td>Boundary only</td><td>the user hits a subtask boundary (no EEG)</td></tr>
+    <tr><td>Modelled fatigue</td><td>an attention budget that depletes and recovers allows it</td></tr>
+    <tr><td>NeuroGate</td><td>EEG load is low for this user, or at a boundary</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:10px">24 participants, within-subject, Latin-square order, 75–90 min primary task. About 12% of requests are planted bad actions: lookalike recipients, inflated invoice amounts, injection-triggered exfiltration, and deletes aimed at protected folders.</p>
+</section>
+
+<section>
+  <h2>First simulation: H2 is the real risk</h2>
+  <p>The prototype's offline simulator runs every policy on the same seeded stream with 24 synthetic reviewers. Their detection falls with true workload and with bunched reviews. The EEG decoder is modelled as noisy (σ = 0.6, roughly AUC 0.7).</p>
+  <div class="chart" role="img" aria-label="Mean d-prime by policy: immediate 1.67, fatigue budget 1.78, batch 1.85, NeuroGate 1.92, boundary only 2.21">
+    <svg viewBox="0 0 560 210">
+      <g class="m" font-size="11">
+        <line x1="130" y1="10" x2="130" y2="180" stroke="var(--line)"/>
+        <line x1="290" y1="10" x2="290" y2="180" stroke="var(--line)" stroke-dasharray="2 3"/>
+        <line x1="450" y1="10" x2="450" y2="180" stroke="var(--line)" stroke-dasharray="2 3"/>
+        <text class="m" x="130" y="198" text-anchor="middle">0</text>
+        <text class="m" x="290" y="198" text-anchor="middle">1.0</text>
+        <text class="m" x="450" y="198" text-anchor="middle">2.0</text>
+      </g>
+      <g>
+        <text x="120" y="29" text-anchor="end">Immediate</text><rect x="130" y="16" width="267" height="20" rx="3" fill="var(--mute)" opacity=".55"/><text x="403" y="31">1.67</text>
+        <text x="120" y="63" text-anchor="end">Fatigue budget</text><rect x="130" y="50" width="285" height="20" rx="3" fill="var(--mute)" opacity=".55"/><text x="421" y="65">1.78</text>
+        <text x="120" y="97" text-anchor="end">Fixed batch</text><rect x="130" y="84" width="296" height="20" rx="3" fill="var(--mute)" opacity=".55"/><text x="432" y="99">1.85</text>
+        <text x="120" y="131" text-anchor="end">NeuroGate</text><rect x="130" y="118" width="307" height="20" rx="3" fill="var(--accent)"/><text x="443" y="133">1.92</text>
+        <text x="120" y="165" text-anchor="end">Boundary only</text><rect x="130" y="152" width="354" height="20" rx="3" fill="var(--alpha)"/><text x="490" y="167">2.21</text>
+      </g>
+    </svg>
+  </div>
+  <p style="margin-top:12px">NeuroGate beats Immediate by +0.25 d′, with 95% CI [−0.15, 0.62], and the false-alarm rate stays flat. But it trails Boundary-only by −0.29 [−0.59, 0.01]. With a noisy decoder, releasing on "low load" sometimes fires mid-task, while boundaries are nearly always genuine low-load moments. Agent wait times: Immediate 0.5 s, NeuroGate 10 s, Boundary 31 s, Batch 143 s.</p>
+  <p class="note">These are synthetic numbers from assumed reviewer and decoder models, not data. They mainly show the study design can detect differences of this size. They also suggest two changes before the pilot. First, gate NeuroGate's load release on decoder confidence. Second, test "boundary AND low load" as a sixth variant.</p>
+</section>
+
+<section>
+  <h2>Hypotheses</h2>
+  <ol>
+    <li><b>H1</b>: NeuroGate gives a higher hit rate than Immediate, with no more false rejections.</li>
+    <li><b>H2</b>: NeuroGate beats Boundary-only. This is the primary confirmatory test, and it may fail.</li>
+    <li><b>H3</b>: Primary-task score and NASA-TLX are no worse than under Immediate.</li>
+    <li><b>H4</b>: Load at the moment of decision predicts missed bad actions (mixed-effects logistic model).</li>
+  </ol>
+  <p class="note" style="margin-top:10px">If H2 fails, the paper becomes "measured oversight capacity: what predicts missed bad approvals", which still yields the first public EEG + approval-decision dataset.</p>
+</section>
+
+<section>
+  <h2>Ethics by design</h2>
+  <ul>
+    <li>Raw EEG never leaves the estimator process; the broker receives one scalar and a boundary flag.</li>
+    <li>No employer sees load data. A visible switch turns the load signal off at any time.</li>
+    <li>The misuse case, pushing approvals at tired moments, is named in the paper, and the release enforces the opposite policy.</li>
+    <li>Institutional ethics approval and informed consent come before any recording. Neural data is regulated in CA, CO, CT, MT and MN.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>14-week plan</h2>
+  <div class="scroll"><table>
+    <tr><th>Weeks</th><th>Work</th></tr>
+    <tr><td>1–2</td><td>Reading passes 1–2, ethics application, secure EEG hardware</td></tr>
+    <tr><td>3–4</td><td>Workload model on STEW / COG-BCI; LSL + MNE calibration pipeline</td></tr>
+    <tr><td>5–6</td><td>Agent workstream, approval broker, planted-action generator <span class="note">(prototype done)</span></td></tr>
+    <tr><td>7</td><td>Five scheduler policies <span class="note">(prototype done)</span></td></tr>
+    <tr><td>8</td><td>OSF pre-registration <span class="note">(draft done)</span>, 6-person pilot</td></tr>
+    <tr><td>9–11</td><td>Main study, 24 participants</td></tr>
+    <tr><td>12</td><td>Consumer-device replication, 8–10 participants</td></tr>
+    <tr><td>13–14</td><td>Analysis, open-source release, paper (CHI, Neuroadaptive Technology Conf., NeurIPS/ICLR workshop)</td></tr>
+  </table></div>
+</section>
+
+<footer class="note">The prototype contains the broker (FastAPI + WebSocket), the scheduler, a simulated and a real band-power estimator, the reviewer UI, the simulator, the analysis scripts and the pre-registration draft. Run it with <code>uvicorn neurogate.broker:app</code>.</footer>
+</div>
