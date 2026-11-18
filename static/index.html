@@ -13,8 +13,8 @@
   --ok:#2f9e6a;--t0:#e04848;--t1:#d18a10;--t2:#3b72e0;--trough:rgba(47,158,106,.12);
   --shadow:0 30px 60px -30px rgba(30,25,15,.25);
 }
-:root[data-theme=dark]{--bg:#0e0d0c;--frame:#171615;--panel:#211f1d;--panel2:#2a2826;--line:#34312e;--ink:#f1eee9;--mute:#a19c94;--dim:#625e58;
-  --accent:#f0704a;--accent-soft:#3d251b;--dark:#2b1a13;--dark-ink:#f6e9e2;--dark-mute:#b39a8f;--ok:#4cc38a;--t0:#ff6b6b;--t1:#f5b84a;--t2:#6fa8ff;--trough:rgba(76,195,138,.12);--shadow:0 30px 60px -30px rgba(0,0,0,.7)}
+:root[data-theme=dark]{--bg:#0c0c0b;--frame:#131312;--panel:#1d1c1a;--panel2:#262522;--line:#2f2d2a;--ink:#f1eee9;--mute:#a19c94;--dim:#625e58;
+  --accent:#f0704a;--accent-soft:#3d251b;--dark:#1a1917;--dark-ink:#f1eee9;--dark-mute:#9a958c;--ok:#4cc38a;--t0:#ff6b6b;--t1:#f5b84a;--t2:#6fa8ff;--trough:rgba(76,195,138,.12);--shadow:0 30px 60px -30px rgba(0,0,0,.7)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 h1,h2,h3,.disp{font-family:"Inter Tight",Inter,sans-serif;letter-spacing:-.025em;margin:0;font-weight:500}
@@ -205,7 +205,7 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 .ring .lbl b{font-size:20px}.ring .lbl small{font-size:9px}
 .gate h2{font-size:20px}.gate p{font-size:13px}.mini b{font-size:16px}
 /* bigger card */
-.stage{min-height:510px}.empty{min-height:510px}
+.stage{min-height:420px}.empty{min-height:420px}
 .card{padding:28px 30px;border-radius:26px}
 .card h2{font-size:clamp(24px,2.1vw,30px);margin:14px 0 6px}
 .diff div{padding:10px 18px;font-size:14px}.prov{font-size:14px}
@@ -222,7 +222,7 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 /* v4 */
 .meta{margin-top:0}.tag{font-size:13px;padding:6px 14px}.pct{font-size:16px}.prog{width:160px}
 .stage{min-height:470px}.empty{min-height:470px}
-.card{padding:26px 28px;min-height:510px;display:flex;flex-direction:column}.card .actions{margin-top:auto;padding-top:18px}.card h2{font-size:clamp(22px,1.9vw,26px);margin:12px 0 4px}
+.card{padding:30px 32px}.card h2{font-size:clamp(22px,1.9vw,26px);margin:12px 0 4px}
 .diff div{padding:9px 16px;font-size:13px}.prov{font-size:13px}.chip{padding:5px 12px;font-size:12px}.btn{padding:11px 22px;font-size:14px}
 /* stats strip */
 .sx{grid-template-columns:repeat(4,1fr);gap:0;background:var(--panel);border:1px solid var(--line);border-radius:26px;padding:6px}
@@ -252,6 +252,12 @@ dialog::backdrop{background:rgba(20,18,14,.45);backdrop-filter:blur(6px)}
 .card.out-ok,.card.out-no{animation:none;transition:opacity .28s ease,transform .28s ease,border-color .15s;opacity:0}
 .card.out-ok{border-color:var(--ok);transform:translateX(16px)}
 .card.out-no{border-color:#d94a3a;transform:translateX(-16px)}
+.rail{z-index:20}.rb .tip{z-index:30}
+.card .diff{margin:20px 0}.card .diff div{padding:12px 18px}.card .reasons{margin-top:16px}.card .actions{margin-top:24px}
+:root[data-theme=dark] .rail,:root[data-theme=dark] .tile.dark{border:1px solid var(--line)}
+:root[data-theme=dark] .card{box-shadow:none}
+:root[data-theme=dark] .card::before{background:color-mix(in srgb,var(--c) 14%,transparent)}
+:root[data-theme=dark] .btn.ok{background:var(--ink);color:var(--bg)}
 </style>
 </head>
 <body>
